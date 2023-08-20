@@ -11,12 +11,17 @@ sectionwidth = 320
 
 
 class MyGui:
+    j = None
+    option = None
 
     def __init__(self):
         # Default properties
-
+        self.j = MyGui.j
+        self.new_tenant = None
+        self.updated_iid = None
+        self.updated_data = None
         self.root = ctk.CTk()
-        self.root.geometry("640x480")
+        self.root.geometry("1280x720")
         self.root.title("Sam Investments LTD")
         self.screen_height = self.root.winfo_screenheight()
 
@@ -33,6 +38,7 @@ class MyGui:
                 return k
 
         def change_to_main():
+            self.tenants.forget()
             self.user = self.username_text.get()
             self.password = self.password_text.get()
 
@@ -46,20 +52,42 @@ class MyGui:
         def return_to_login():
             self.loginframe.pack(fill="both", expand=True)
             self.mainframe.forget()
-            self.tenants.forget()
 
         def tenant_management(event):
             self.tenants.pack(fill="both", expand=True)
-            self.tenant_table.update()
-            self.tenant_table.update_idletasks()
             self.mainframe.forget()
 
-        def add_new_tenant():
-            new_tenant = forms.InputDialog()
-            data2 = (new_tenant.firstname, new_tenant.lastname, new_tenant.houseno)
-            self.tenant_table.insert(parent='', index=0, values=data2)
+        def actions():
+            self.new_tenant = forms.InputDialog()
+            self.data2 = self.new_tenant.getinfo()
+            self.updated_iid = self.new_tenant.updatediid()
+            self.updated_data = self.new_tenant.getinfo2()
+            self.added_iid = self.new_tenant.getiid()
+            if self.new_tenant.action == "add":
+                self.added_iid = self.added_iid[0]
+                self.tenant_table.insert(parent='', index=100, values=self.data2, iid=self.added_iid)
+            elif self.new_tenant.action == "update":
+                self.updated_iid_real = self.updated_iid[0]
+                self.tenant_table.delete(self.updated_iid_real)
+                print("Deleted")
+                print(self.updated_data)
+                self.tenant_table.insert(parent='', index=100, values=self.updated_data, iid=self.updated_iid_real)
 
+        def delete_tenant(event):
+            for i in self.tenant_table.selection():
+                self.to_be_deleted = str(self.tenant_table.item(i)['values'][1])
+                self.tenant_table.delete(i)
+                query1 = f"DELETE FROM tenantinfo WHERE first_name= '{self.to_be_deleted}'"
+                self.cur_object.execute(query1)
+                self.conn_obj.commit()
 
+        def update_tenant1():
+            self.tenant_table.delete(f'{self.updated_iid}')
+            self.tenant_table.insert(parent='', index=20, values=self.updated_data)
+
+        def getids(event):
+            for item in self.tenant_table.selection():
+                print(item)
 
 
 
@@ -150,41 +178,48 @@ class MyGui:
                                                    font=('Arial', 16))
         self.token_monitoring_label.pack(padx=10, pady=10)
 
-        self.tenants_label = ctk.CTkLabel(self.tenants, text="", text_color="yellow")
-        self.tenants_label.pack()
-        self.entry1 = ctk.CTkEntry(self.tenants, placeholder_text="Wassuh", height=40, width=150)
+        self.tenants_label = ctk.CTkLabel(self.tenants, text="TENANT MANAGEMENT",font=('Times', 30), text_color="yellow")
+        self.tenants_label.pack(pady=5)
+        self.entry1 = ctk.CTkEntry(self.tenants, placeholder_text="Search", height=10, width=250, justify=tk.CENTER)
+        self.entry1.pack(padx=10, pady=25)
 
-        self.tenant_table = ttk.Treeview(self.tenants, columns=('tenant_id', 'First_name', 'Last_name', 'House_no'), show='headings')
+        self.tenant_table = ttk.Treeview(self.tenants, columns=('tenant_id', 'First_name', 'Last_name', 'House_no'), show='headings', height=20)
         self.tenant_table.heading('tenant_id', text='Tenant_Id')
         self.tenant_table.heading('First_name', text='First_Name')
         self.tenant_table.heading('Last_name', text='Last_Name')
         self.tenant_table.heading('House_no', text='House_No')
+        self.tenant_table.bind("<Delete>", delete_tenant)
+        self.tenant_table.bind("<<TreeviewSelect>>", getids)
         self.tenant_table.pack()
 
         self.datalist = ctk.CTkLabel(self.tenants, text="", text_color="blue")
         self.datalist.pack()
 
-        self.returnbutton = ctk.CTkButton(master=self.sideframe, text="Return", font=('Arial', 16), command=return_to_login)
-        self.returnbutton.pack(side=tk.TOP, padx=10, pady=10)
 
 
-        self.returnbutton2 = ctk.CTkButton(master=self.tenants, text="Return", font=('Arial', 20), command=return_to_login)
-        self.returnbutton2.pack(pady=20, side=tk.BOTTOM)
+        self.loginreturnbutton = ctk.CTkButton(master=self.sideframe, text="Return", font=('Arial', 16), command=return_to_login)
+        self.loginreturnbutton.pack(side=tk.TOP, padx=10, pady=10)
 
-        self.create_button = ctk.CTkButton(master=self.tenants, text="Add new tenant", font=('Roboto', 14), command=add_new_tenant)
-        self.create_button.pack(pady=20, side=tk.BOTTOM)
+
+        self.mainreturnbutton = ctk.CTkButton(master=self.tenants, text="Return", font=('Arial', 20), command=change_to_main)
+        self.mainreturnbutton.pack(pady=10, side=tk.BOTTOM)
+
+        self.create_button = ctk.CTkButton(master=self.tenants, text="Actions", font=('Roboto', 14), command=actions)
+        self.create_button.bind("<Button-1>", actions)
+        self.create_button.pack(pady=10, side=tk.BOTTOM)
+
 
         # Tenants table put it here ndo isishinde imejicall having a redundant treeview
-        conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='tenants')
-        cur_object = conn_obj.cursor()
-        cur_object.execute('SELECT tenant_id FROM tenantinfo')
-        tenant_ids = cur_object.fetchall()
-        cur_object.execute('SELECT first_name FROM tenantinfo')
-        first_names = cur_object.fetchall()
-        cur_object.execute('SELECT last_name FROM tenantinfo')
-        last_names = cur_object.fetchall()
-        cur_object.execute('SELECT house_no FROM tenantinfo')
-        house_nos = cur_object.fetchall()
+        self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='tenants')
+        self.cur_object = self.conn_obj.cursor()
+        self.cur_object.execute('SELECT tenant_id FROM tenantinfo')
+        tenant_ids = self.cur_object.fetchall()
+        self.cur_object.execute('SELECT first_name FROM tenantinfo')
+        first_names = self.cur_object.fetchall()
+        self.cur_object.execute('SELECT last_name FROM tenantinfo')
+        last_names = self.cur_object.fetchall()
+        self.cur_object.execute('SELECT house_no FROM tenantinfo')
+        house_nos = self.cur_object.fetchall()
         counter = 0
         fnames = []
         lnames = []
@@ -205,12 +240,14 @@ class MyGui:
             last_name = lnames[counter]
             house_no = hnos[counter]
             data = (tenant_id, first_name, last_name, house_no)
-            self.tenant_table.insert(parent='', index=0, values=data)
+            self.tenant_table.insert(parent='', index=counter, values=data , iid=tenant_id)
             counter = counter + 1
 
-
+        if self.j:
+            update_tenant1()
 
         self.root.mainloop()
 
-
-gui1 = MyGui()
+if __name__ == "__main__":
+    gui1 = MyGui()
+    
