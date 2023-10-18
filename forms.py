@@ -93,7 +93,7 @@ class InputDialog:
             try:
 
                 conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
-                                            database="tenants")
+                                            database="SamInvestments")
                 cur_obj = conn_obj.cursor()
                 cur_obj.execute("INSERT INTO tenantinfo(first_name, last_name, house_no) VALUES(%s,%s,%s)", self.data1)
                 conn_obj.commit()
@@ -116,7 +116,7 @@ class InputDialog:
                 self.root.quit()
 
         #Update tenant widgets
-        conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database="tenants")
+        conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database="SamInvestments")
         cur_obj = conn_obj.cursor()
         cur_obj.execute("SELECT house_no FROM tenantinfo")
         house_numbers = cur_obj.fetchall()

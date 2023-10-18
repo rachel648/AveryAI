@@ -350,12 +350,16 @@ class MyGui:
 
 
 
-
+#Add something
         # Tenants table put it here ndo isishinde imejicall having a redundant treeview
+<<<<<<< Updated upstream
         for item in self.tenant_table.get_children():
             self.tenant_table.delete(item)
         self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
                                          database='tenants')
+=======
+        self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='SamInvestments')
+>>>>>>> Stashed changes
         self.cur_object = self.conn_obj.cursor()
         self.cur_object.execute('SELECT tenant_id FROM tenantinfo')
         tenant_ids = self.cur_object.fetchall()
