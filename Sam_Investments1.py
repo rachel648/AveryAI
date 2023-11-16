@@ -7,7 +7,7 @@ from postgresDatabase import MyDatabase
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
-sectionwidth = 320
+sectionwidth = 420
 
 
 class MyGui:
@@ -39,6 +39,8 @@ class MyGui:
                     conn_obj.close()
                 return k
 
+
+
         def change_to_main():
             self.tenants.forget()
             self.expenses.forget()
@@ -55,6 +57,9 @@ class MyGui:
         def return_to_login():
             self.loginframe.pack(fill="both", expand=True)
             self.mainframe.forget()
+
+        def enter_clicked(event):
+            change_to_main()
 
         def tenant_management(event):
             self.tenants.pack(fill="both", expand=True)
@@ -102,7 +107,7 @@ class MyGui:
         def fill_tenant_table():
             for item in self.tenant_table.get_children():
                 self.tenant_table.delete(item)
-            self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='tenants')
+            self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='SamInvestments')
             self.cur_object = self.conn_obj.cursor()
             self.cur_object.execute('SELECT tenant_id FROM tenantinfo')
             tenant_ids = self.cur_object.fetchall()
@@ -138,7 +143,7 @@ class MyGui:
         def search_for_tenant(event):
             name = self.search_tenant.get()
             result = None
-            conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='tenants')
+            conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='SamInvestments')
             cur_obj = conn_obj.cursor()
             cur_obj.execute(f"SELECT * FROM tenantinfo WHERE first_name = '{name}'")
             result = cur_obj.fetchall()
@@ -173,6 +178,8 @@ class MyGui:
         self.loginframe = ctk.CTkFrame(master=self.root)
         self.loginframe.pack(fill="both", expand=True)
 
+
+
         self.mainframe = ctk.CTkFrame(master=self.root)
         self.tenants = ctk.CTkFrame(master=self.root)
         self.expenses = ctk.CTkFrame(master=self.root)
@@ -196,12 +203,15 @@ class MyGui:
                                           font=('Arial', 12), width=300, show="*")
         self.password_text.pack(padx=10, pady=15)
 
+        self.password_text.bind("<Return>", command=enter_clicked)
+
         self.errormessage = ctk.CTkLabel(self.loginframe, text=" ", text_color="red")
         self.errormessage.pack()
 
         self.loginbutton = ctk.CTkButton(master=self.loginframe, text="LOGIN", font=('Arial', 16),
                                          command=change_to_main)
         self.loginbutton.pack(padx=5, pady=10)
+
 
         # MainFrame
         self.sideframe = ctk.CTkFrame(self.mainframe, fg_color="#0c041a", height=self.screen_height, width=300)
@@ -232,16 +242,7 @@ class MyGui:
                                                     font=('Arial', 16))
         self.tenant_management_label.pack(padx=10, pady=10)
 
-        self.monitoring_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
-        self.monitoring_frame.pack_propagate(False)
-        self.monitoring_frame.bind("<Enter>", command=change_cursor(self.monitoring_frame))
-        self.monitoring_frame.bind("<Enter>", command=lambda e: self.monitoring_frame.configure(fg_color="green", height=310, width=(sectionwidth+10)))
-        self.monitoring_frame.bind("<Leave>", command=lambda e: self.monitoring_frame.configure(fg_color="#0e1b52", height=300, width=sectionwidth))
-        self.monitoring_frame.grid(row=0, column=2, padx=10, pady=10)
 
-        self.monitoring_label = ctk.CTkLabel(self.monitoring_frame, text="Electricity and water monitoring",
-                                             font=('Arial', 16))
-        self.monitoring_label.pack(padx=5, pady=10)
 
         self.CCTV_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
         self.CCTV_frame.pack_propagate(False)
@@ -258,23 +259,14 @@ class MyGui:
         self.SMS_automation_frame.bind("<Enter>", command=change_cursor(self.SMS_automation_frame))
         self.SMS_automation_frame.bind("<Enter>", command=lambda e: self.SMS_automation_frame.configure(fg_color="green", height=310, width=(sectionwidth+10)))
         self.SMS_automation_frame.bind("<Leave>", command=lambda e: self.SMS_automation_frame.configure(fg_color="#0e1b52", height=300, width=sectionwidth))
-        self.SMS_automation_frame.grid(row=0, column=3, padx=10, pady=10)
+        self.SMS_automation_frame.grid(row=0, column=2, padx=10, pady=10)
 
         self.SMS_automation_label = ctk.CTkLabel(self.SMS_automation_frame, text="SMS Automation", font=('Arial', 16))
         self.SMS_automation_label.pack(padx=5, pady=10)
 
-        self.token_monitoring_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
-        self.token_monitoring_frame.pack_propagate(False)
-        self.token_monitoring_frame.bind("<Enter>", command=change_cursor(self.token_monitoring_frame))
-        self.token_monitoring_frame.bind("<Enter>", command=lambda e: self.token_monitoring_frame.configure(fg_color="green", height=310, width=(sectionwidth+10)))
-        self.token_monitoring_frame.bind("<Leave>", command=lambda e: self.token_monitoring_frame.configure(fg_color="#0e1b52", height=300, width=sectionwidth))
-        self.token_monitoring_frame.grid(row=1, column=3, padx=10, pady=5)
-
-        self.token_monitoring_label = ctk.CTkLabel(self.token_monitoring_frame, text="Token Monitoring", font=('Arial', 16))
-        self.token_monitoring_label.pack(padx=10, pady=10)
 
         self.loginreturnbutton = ctk.CTkButton(master=self.sideframe, text="Return", font=('Arial', 16), command=return_to_login)
-        self.loginreturnbutton.pack(side=tk.TOP, padx=10, pady=5)
+        self.loginreturnbutton.grid(column =100, row=10)
 
         # Tenants Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.tenants_label = ctk.CTkLabel(self.tenants, text="TENANT MANAGEMENT",font=('Times', 30), text_color="green")
@@ -352,14 +344,12 @@ class MyGui:
 
 #Add something
         # Tenants table put it here ndo isishinde imejicall having a redundant treeview
-<<<<<<< Updated upstream
+
         for item in self.tenant_table.get_children():
             self.tenant_table.delete(item)
         self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
-                                         database='tenants')
-=======
+                                         database='SamInvestments')
         self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='SamInvestments')
->>>>>>> Stashed changes
         self.cur_object = self.conn_obj.cursor()
         self.cur_object.execute('SELECT tenant_id FROM tenantinfo')
         tenant_ids = self.cur_object.fetchall()
