@@ -1,9 +1,23 @@
 import tkinter as tk
+from tkinter import *
 import customtkinter as ctk
+from PIL import Image
 from tkinter import ttk
 import psycopg2
 from AveryAI import forms
+from AveryAI import sms
+from AveryAI import payment
 from postgresDatabase import MyDatabase
+import cv2
+
+import os
+from twilio.rest import Client
+
+
+
+
+cap = cv2.VideoCapture(0)
+
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -44,6 +58,8 @@ class MyGui:
         def change_to_main():
             self.tenants.forget()
             self.expenses.forget()
+            self.sms_thing.forget()
+            self.view_CCTV.forget()
             self.user = self.username_text.get()
             self.password = self.password_text.get()
 
@@ -61,6 +77,30 @@ class MyGui:
         def enter_clicked(event):
             change_to_main()
 
+        def CCTV_see(event):
+            self.view_CCTV.pack(fill="both", expand=True)
+            self.mainframe.forget()
+            self.tenant_management_frame.forget()
+            self.expense_tracking_frame.forget()
+
+
+
+        def CCTV_button_clicked():
+            if not cap.isOpened():
+                raise IOError("Cannot open webcam")
+
+            while True:
+                trialInt = 600
+                ret, frame = cap.read()
+                frame = cv2.resize(frame, None, fx=1, fy=1, interpolation=cv2.INTER_AREA)
+                cv2.imshow('Input', frame)
+
+                c = cv2.waitKey(1)
+                if c == 27:
+                    break
+
+            cap.release()
+            cv2.destroyAllWindows()
         def tenant_management(event):
             self.tenants.pack(fill="both", expand=True)
             self.mainframe.forget()
@@ -70,6 +110,54 @@ class MyGui:
             self.mainframe.forget()
             self.tenant_management_frame.forget()
 
+        def sms_automation(event):
+            self.sms_thing.pack(fill="both", expand=True)
+            self.mainframe.forget()
+            self.tenant_management_frame.forget()
+
+        def payment_actions():
+            self.new_payment = payment.Payment_Input_Dialogue()
+
+        def sms_actions():
+            self.new_message = sms.sms_input_dialogue()
+            sms_actions_ext()
+        def sms_actions_ext():
+            for item in self.messages_treeview.get_children():
+                self.messages_treeview.delete(item)
+            self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd,
+                                             host=MyDatabase.hostname,
+                                             database='SamInvestments')
+            self.cur_object = self.conn_obj.cursor()
+            self.cur_object.execute('SELECT message_id FROM messages')
+            message_ids = self.cur_object.fetchall()
+            self.cur_object.execute('SELECT message_title FROM messages')
+            message_titles = self.cur_object.fetchall()
+            self.cur_object.execute('SELECT message_content FROM messages')
+            message_contents = self.cur_object.fetchall()
+            self.cur_object.execute('SELECT message_date FROM messages')
+            message_dates = self.cur_object.fetchall()
+            counter = 0
+            mtitles = []
+            mcontents = []
+            mdates = []
+
+            for mtitle in message_titles:
+                mtitles.append(mtitle)
+
+            for mcontent in message_contents:
+                mcontents.append(mcontent)
+
+            for mdate in message_dates:
+                mdates.append(mdate)
+
+            for mid in message_ids:
+                message_id = mid
+                message_title = mtitles[counter]
+                message_content = mcontents[counter]
+                message_date = mdates[counter]
+                data6 = (message_id, message_title[0], message_content[0], message_date)
+                self.messages_treeview.insert(parent='', index=counter, values=data6, iid=message_id)
+                counter = counter + 1
 
         def actions():
             self.new_tenant = forms.InputDialog()
@@ -86,6 +174,8 @@ class MyGui:
                 print("Deleted")
                 print(self.updated_data)
                 self.tenant_table.insert(parent='', index=100, values=self.updated_data, iid=self.updated_iid_real)
+
+
 
         def delete_tenant(event):
             for i in self.tenant_table.selection():
@@ -142,33 +232,54 @@ class MyGui:
 
         def search_for_tenant(event):
             name = self.search_tenant.get()
+            print(name)
             result = None
+            result1 = None
+            f_name = False
+            l_name = False
             conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='SamInvestments')
             cur_obj = conn_obj.cursor()
             cur_obj.execute(f"SELECT * FROM tenantinfo WHERE first_name = '{name}'")
             result = cur_obj.fetchall()
+
             if not result:
                 cur_obj.execute(f"SELECT * FROM tenantinfo WHERE last_name = '{name}'")
-                if not result:
-                    print("Not found")
-                else:
-                    pass
-            else:
+                result1 = cur_obj.fetchall()
+                if result1:
+                    l_name = True
+                    for name1 in last_names:
+                        name2 = name1[0]
+                        if name2 == name:
+                            cur_obj.execute(f"SELECT tenant_id FROM tenantinfo WHERE last_name = '{name}'")
+                            id_late = cur_obj.fetchone()
+                    for ten_id in tenant_ids:
+                        self.tenant_table.focus(ten_id[0])
+                        item = self.tenant_table.focus()
+                        id_late1 = str(id_late[0])
 
+                        if item == id_late1:
+                            print("I am mr meeseeks look at me: Search for tenant test passed")
+                        else:
+                            self.tenant_table.delete(ten_id)
+                else:
+                    print("Tenant Not found")
+
+            else:
+                f_name = True
+                print("First name found")
                 for name1 in first_names:
                     name2 = name1[0]
                     if name2 == name:
                         cur_obj.execute(f"SELECT tenant_id FROM tenantinfo WHERE first_name = '{name}'")
                         id_late = cur_obj.fetchone()
                 for ten_id in tenant_ids:
-                    print(ten_id[0])
                     self.tenant_table.focus(ten_id[0])
                     item = self.tenant_table.focus()
                     id_late1 = str(id_late[0])
-                    print(id_late1 + ":::::" + item)
+
 
                     if item == id_late1:
-                        print("I am mr meeseeks look at me")
+                        print("I am mr meeseeks look at me: Search for tenant test passed")
                     else:
                         self.tenant_table.delete(ten_id)
                 self.k = True
@@ -183,6 +294,8 @@ class MyGui:
         self.mainframe = ctk.CTkFrame(master=self.root)
         self.tenants = ctk.CTkFrame(master=self.root)
         self.expenses = ctk.CTkFrame(master=self.root)
+        self.sms_thing= ctk.CTkFrame(master=self.root)
+        self.view_CCTV = ctk.CTkFrame(master=self.root)
         # Actual widgets
         self.main_label = ctk.CTkLabel(self.loginframe, text="SAM INVESTMENTS RENTAL MANAGEMENT",
                                        font=('Lithos Pro Regular', 30), text_color='green')
@@ -213,11 +326,12 @@ class MyGui:
         self.loginbutton.pack(padx=5, pady=10)
 
 
+
         # MainFrame
-        self.sideframe = ctk.CTkFrame(self.mainframe, fg_color="#0c041a", height=self.screen_height, width=300)
+        self.sideframe = ctk.CTkFrame(self.mainframe, fg_color="#0c041a", height=self.screen_height, width=300, corner_radius=0)
         self.sideframe.grid_propagate(False)
         self.sideframe.pack_propagate(False)
-        self.sideframe.grid(row=0, column=0, rowspan=3, padx=(0, 20), pady=10)
+        self.sideframe.grid(row=0, column=0, rowspan=3, padx=(0, 20), pady=0)
 
         self.expense_tracking_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
         self.expense_tracking_frame.pack_propagate(False)
@@ -247,26 +361,48 @@ class MyGui:
         self.CCTV_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
         self.CCTV_frame.pack_propagate(False)
         self.CCTV_frame.bind("<Enter", change_cursor(self.CCTV_frame))
+        self.CCTV_frame.bind("<Button-1>", CCTV_see)
         self.CCTV_frame.bind("<Enter>", command=lambda e: self.CCTV_frame.configure(fg_color="green", height=310, width=(sectionwidth+10)))
         self.CCTV_frame.bind("<Leave>", command=lambda e: self.CCTV_frame.configure(fg_color="#0e1b52",  height=300, width=sectionwidth))
         self.CCTV_frame.grid(row=1, column=2, padx=10, pady=10)
-
-        self.CCTV_label = ctk.CTkLabel(self.CCTV_frame, text="CCTV interface", font=('Arial', 16))
+        self.CCTV_label = ctk.CTkLabel(self.CCTV_frame, text="CCTV interface")
         self.CCTV_label.pack(padx=10, pady=10)
+
+
+
+        self.button1 = ctk.CTkButton(self.view_CCTV, text="View CCTV data", command=CCTV_button_clicked)
+        self.button1.pack(padx=10, pady=10)
+
+        self.CCTVreturn_button = ctk.CTkButton(self.view_CCTV, text="Return", command=change_to_main)
+        self.CCTVreturn_button.pack(padx=10, pady=60)
+
 
         self.SMS_automation_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
         self.SMS_automation_frame.pack_propagate(False)
         self.SMS_automation_frame.bind("<Enter>", command=change_cursor(self.SMS_automation_frame))
+        self.SMS_automation_frame.bind("<Button-1>", sms_automation)
         self.SMS_automation_frame.bind("<Enter>", command=lambda e: self.SMS_automation_frame.configure(fg_color="green", height=310, width=(sectionwidth+10)))
         self.SMS_automation_frame.bind("<Leave>", command=lambda e: self.SMS_automation_frame.configure(fg_color="#0e1b52", height=300, width=sectionwidth))
         self.SMS_automation_frame.grid(row=0, column=2, padx=10, pady=10)
 
-        self.SMS_automation_label = ctk.CTkLabel(self.SMS_automation_frame, text="SMS Automation", font=('Arial', 16))
+        self.SMS_automation_label = ctk.CTkLabel(self.SMS_automation_frame, text="SMS Automation frames", font=('Arial', 16))
         self.SMS_automation_label.pack(padx=5, pady=10)
+
+        self.profile_image = ctk.CTkImage(light_image=Image.open("./images/profile_icon_light.png"), dark_image=Image.open("./images/profile_icon_dark.png"), size=(90,90))
+        self.profile = ctk.CTkButton(self.sideframe, image=self.profile_image, height=90,width=70, text='', corner_radius=0)
+        self.profile.pack(padx=10,pady=10)
+        self.profile_label = ctk.CTkLabel(self.sideframe, text="Samson Moturi", font=('Roboto', 16))
+        self.profile_label.pack(padx=10, pady=10)
+        self.payment_button = ctk.CTkButton(self.sideframe, text="Pay", height=50, width=300,font=('Roboto',18), corner_radius=0, fg_color="#0c041a", command=payment_actions)
+        self.payment_button.pack(padx=0, pady=(50,0))
+        self.sms_button = ctk.CTkButton(self.sideframe, text="Send SMS", height=50, width=300, font=('Roboto', 18),corner_radius=0, fg_color="#0c041a", command=sms_actions)
+        self.sms_button.pack(padx=0, pady=(0,0))
+        self.settings_button = ctk.CTkButton(self.sideframe, text="Settings", height=50, width=300, font=('Roboto',18), corner_radius=0, fg_color="#0c041a")
+        self.settings_button.pack(padx=0, pady=0)
 
 
         self.loginreturnbutton = ctk.CTkButton(master=self.sideframe, text="Return", font=('Arial', 16), command=return_to_login)
-        self.loginreturnbutton.grid(column =100, row=10)
+        self.loginreturnbutton.pack(padx=10, pady=(300,10))
 
         # Tenants Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.tenants_label = ctk.CTkLabel(self.tenants, text="TENANT MANAGEMENT",font=('Times', 30), text_color="green")
@@ -326,16 +462,109 @@ class MyGui:
         self.data_analysis_label = ctk.CTkLabel(self.expenses, text="Data Analysis", font=('Arial', 25), text_color="white")
         self.data_analysis_label.grid(row=2, column=0, padx=10, pady=10, columnspan=15)
 
-        self.target_track = ctk.CTkFrame(self.expenses, height= 300, width= 350)
-        self.target_track.grid(row=3, rowspan = 10 ,column = 1, columnspan = 10, padx=20, pady = 10)
+        self.payment_treeview = ttk.Treeview(self.expenses, columns=('pay_id', 'pay_reason', 'pay_amount', 'pay_date'),
+                                         show='headings', height=20)
+        self.payment_treeview.heading('pay_id', text='Pay_ID')
+        self.payment_treeview.heading('pay_reason', text='Pay_Reason')
+        self.payment_treeview.heading('pay_amount', text='Pay_Amount')
+        self.payment_treeview.heading('pay_date', text='Pay_Date')
+        self.payment_treeview.grid(row=99, column=3, padx=100, pady=10)
 
-        self.data_track = ctk.CTkFrame(self.expenses, height=250, width = 250, corner_radius=20 )
-        self.data_track.grid(row=4, rowspan=10, column=1, columnspan=10, padx=20, pady=10 )
+        for item in self.payment_treeview.get_children():
+            self.payment_treeview.delete(item)
+        self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
+                                         database='SamInvestments')
+        self.cur_object = self.conn_obj.cursor()
+        self.cur_object.execute('SELECT pay_id FROM payments')
+        pay_ids = self.cur_object.fetchall()
+        self.cur_object.execute('SELECT pay_reason FROM payments')
+        pay_reasons = self.cur_object.fetchall()
+        self.cur_object.execute('SELECT pay_amount FROM payments')
+        pay_amounts = self.cur_object.fetchall()
+        self.cur_object.execute('SELECT pay_date FROM payments')
+        pay_dates = self.cur_object.fetchall()
+        counter = 0
+        preasons = []
+        pamounts = []
+        pdates = []
+
+        for preason in pay_reasons:
+            preasons.append(preason)
+
+        for pamount in pay_amounts:
+            pamounts.append(pamount)
+
+        for pdate in pay_dates:
+            pdates.append(pdate)
+
+        for pid in pay_ids:
+            pay_id = pid
+            pay_reason = preasons[counter]
+            pay_amount = pamounts[counter]
+            pay_date = pdates[counter]
+            data5 = (pay_id, pay_reason, pay_amount, pay_date)
+            self.payment_treeview.insert(parent='', index=counter, values=data5, iid=pay_id)
+            counter = counter + 1
+
+
+
 
         self.expensereturn_button = ctk.CTkButton(self.expenses, text="Return", font=('Roboto', 14), command=change_to_main, height=30 )
         self.expensereturn_button.grid(row=100, column=2, columnspan=4, padx=10, pady=10)
 
+        #SMS_AUTOMATION FRAMEEE!!!!!!
+        self.sms_label = ctk.CTkLabel(self.sms_thing, text=" SMS AUTOMATION", font=('Roboto', 20), text_color="green")
+        self.sms_label.pack(padx=10, pady=10)
 
+        self.messages_treeview = ttk.Treeview(self.sms_thing, columns=('message_id', 'message_title', 'message_content', 'message_date'),
+                                             show='headings', height=20)
+        self.messages_treeview.heading('message_id', text='Message_ID')
+        self.messages_treeview.heading('message_title', text='Message_Title')
+        self.messages_treeview.heading('message_content', text='Message_Content')
+        self.messages_treeview.heading('message_date', text='Message_Date')
+        self.messages_treeview.pack(padx=10, pady=70)
+
+        for item in self.messages_treeview.get_children():
+            self.messages_treeview.delete(item)
+        self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
+                                         database='SamInvestments')
+        self.cur_object = self.conn_obj.cursor()
+        self.cur_object.execute('SELECT message_id FROM messages')
+        message_ids = self.cur_object.fetchall()
+        self.cur_object.execute('SELECT message_title FROM messages')
+        message_titles = self.cur_object.fetchall()
+        self.cur_object.execute('SELECT message_content FROM messages')
+        message_contents = self.cur_object.fetchall()
+        self.cur_object.execute('SELECT message_date FROM messages')
+        message_dates = self.cur_object.fetchall()
+        counter = 0
+        mtitles = []
+        mcontents = []
+        mdates = []
+
+        for mtitle in message_titles:
+            mtitles.append(mtitle)
+
+        for mcontent in message_contents:
+            mcontents.append(mcontent)
+
+        for mdate in message_dates:
+            mdates.append(mdate)
+
+        for mid in message_ids:
+            message_id = mid
+            message_title = mtitles[counter]
+            message_content = mcontents[counter]
+            message_date = mdates[counter]
+            data6 = (message_id, message_title[0], message_content[0], message_date)
+            self.messages_treeview.insert(parent='', index=counter, values=data6, iid=message_id)
+            counter = counter + 1
+
+        self.send_sms_button = ctk.CTkButton(self.sms_thing, text="Send SMS", font=('Roboto', 14), height=30, command= sms_actions)
+        self.send_sms_button.pack(padx=10, pady=10)
+
+        self.return_sms_button = ctk.CTkButton(self.sms_thing, text="Return", font=('Roboto', 14), height=30, command=change_to_main)
+        self.return_sms_button.pack(padx=10, pady=10)
 
 
 

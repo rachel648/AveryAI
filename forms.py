@@ -35,6 +35,7 @@ class InputDialog:
 
         self.update_tenant = ctk.CTkFrame(self.root)
         self.addtenant_Frame = ctk.CTkFrame(self.root)
+        self.check_tenant_state = ctk.CTkFrame(self.root)
 
         def update_tenant():
             MyGui.option = "update"
@@ -83,7 +84,25 @@ class InputDialog:
             self.addtenant_Frame.pack(fill="both", expand=True)
             self.mainframe.forget()
             self.update_tenant.forget()
+            self.check_tenant_state.forget()
 
+        def check_tenant_status():
+            self.check_tenant_state.pack(fill="both", expand=True)
+            self.mainframe.forget()
+            self.addtenant_Frame.forget()
+            self.update_tenant.forget()
+
+        def check_tenant_status_clicked():
+            house_no = self.select_house_combobox.get()
+            conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
+                                        database="SamInvestments")
+            cur_obj = conn_obj.cursor()
+            cur_obj.execute(f"SELECT tenant_status FROM tenantstatus WHERE house_number='{house_no}'")
+            my_label = cur_obj.fetchone()
+            cur_obj.execute(f"SELECT tenant_balance FROM tenantstatus WHERE house_number='{house_no}'")
+            balance = cur_obj.fetchone()
+            self.check_tenant_state_label.configure(text=f"Tenant state of tenant in house number: {self.select_house_combobox.get()} is {my_label[0]} and balance is {balance[0]} ", font=('Roboto', 15))
+            self.check_tenant_state_label.grid(row=3, column=0, padx=10, pady=10)
         def destruct():
             self.action = "add"
             self.firstname = self.first_name_entry.get()
@@ -158,9 +177,8 @@ class InputDialog:
         self.add_new_tenant_button = ctk.CTkButton(self.mainframe, text="Add new tenant", command=add_tenant)
         self.add_new_tenant_button.pack(padx=15, pady=15)
 
-        self.search_for_tenant_button = ctk.CTkButton(self.mainframe, text="Search for tenant")
-        self.search_for_tenant_button.pack(padx=15, pady=15)
-
+        self.check_tenant_state_button = ctk.CTkButton(self.mainframe, text="Check tenant status", command=check_tenant_status)
+        self.check_tenant_state_button.pack(padx=15, pady=15)
 
         # widgets add tenants
         label1 = ctk.CTkLabel(self.addtenant_Frame, text="Add new tenant", font=('Arial', 30))
@@ -185,6 +203,40 @@ class InputDialog:
         self.errmessage.pack()
 
         print(MyGui.option)
+
+        #Check tenant status widgets
+        conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
+                                    database="SamInvestments")
+        cur_obj = conn_obj.cursor()
+        cur_obj.execute("SELECT house_number FROM tenantstatus")
+        house_numbers = cur_obj.fetchall()
+
+        house_nos = []
+
+        for house_no in house_numbers:
+            for item in house_no:
+                house_nos.append(item)
+
+        self.update_label = ctk.CTkLabel(self.check_tenant_state, text="Select tenant you want to check",
+                                         font=('Roboto', 30, 'bold'))
+        self.update_label.grid(row=0, column=0, columnspan=6, padx=30, pady=(0, 20))
+
+        self.select_house_combobox = ctk.CTkComboBox(self.check_tenant_state, values=house_nos,
+                                                     width=200)
+        self.select_house_combobox.grid(row=1, column=0, columnspan=1, padx=5, pady=10)
+        self.select_house_combobox.bind("<<ComboboxSelected>>")
+
+
+        self.check_tenant_button = ctk.CTkButton(self.check_tenant_state, text="Check status", command=check_tenant_status_clicked)
+        self.check_tenant_button.grid(row=2, column=1, padx=10, pady=10)
+
+        self.check_tenant_state_label = ctk.CTkLabel(self.check_tenant_state, text= "Hello")
+
+        self.confirm_message = ctk.CTkLabel(self.check_tenant_state, text="", text_color="green", font=('Roboto', 18))
+        self.confirm_message.grid(row=9, column=0, columnspan=6, padx=40, pady=30)
+
+        self.check_status_exit_button = ctk.CTkButton(self.check_tenant_state, text="Exit", command=move_to_main)
+        self.check_status_exit_button.grid(row=10, column=1, padx=10, pady=40)
 
         self.root.mainloop()
     def getinfo(self):
