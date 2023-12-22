@@ -5,9 +5,16 @@ from postgresDatabase import MyDatabase
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-account_sid = 'AC72ed2a3576f72dea6a9768320c4bfb02'
-auth_token = '0118b72cd1c56be583ecc944a26a8c8e'
-client = Client(account_sid, auth_token)
+conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
+                            database="SamInvestments")
+cur_obj = conn_obj.cursor()
+cur_obj.execute("SELECT account_sid FROM gen")
+account_sid = cur_obj.fetchone()
+cur_obj.execute("SELECT auth_token FROM gen")
+auth_token = cur_obj.fetchone()
+conn_obj.commit()
+conn_obj.close()
+client = Client(account_sid[0], auth_token[0])
 
 class sms_input_dialogue:
     def __init__(self):
