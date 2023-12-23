@@ -78,6 +78,7 @@ class InputDialog:
             self.mainframe.pack(fill="both", expand=True)
             self.addtenant_Frame.forget()
             self.update_tenant.forget()
+            self.check_tenant_state.forget()
 
         def add_tenant():
             MyGui.option = "add"
