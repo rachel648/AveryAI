@@ -10,6 +10,7 @@ from PIL import Image
 
 import forms
 import payment
+import sms
 from postgresDatabase import MyDatabase
 
 cap = cv2.VideoCapture(0)
@@ -116,7 +117,7 @@ class MyGui:
             self.new_payment = payment.Payment_Input_Dialogue()
 
         def sms_actions():
-            self.new_message = sms_actions_ext.sms_input_dialogue()
+            self.new_message = sms.sms_input_dialogue()
             sms_actions_ext()
         def sms_actions_ext():
             for item in self.messages_treeview.get_children():

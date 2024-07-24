@@ -95,16 +95,17 @@ class InputDialog:
 
         def check_tenant_status_clicked():
             house_no = self.select_house_combobox.get()
-            conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
+            self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
                                         database="SamInvestments")
-            cur_obj = conn_obj.cursor()
-            cur_obj.execute(f"SELECT tenant_status FROM tenantstatus WHERE house_number='{house_no}'")
-            my_label = cur_obj.fetchone()
-            cur_obj.execute(f"SELECT tenant_balance FROM tenantstatus WHERE house_number='{house_no}'")
+            self.cur_obj = self.conn_obj.cursor()
+            self.cur_obj.execute(f"SELECT tenant_status FROM tenantstatus WHERE house_number='{house_no}'")
+            my_label = self.cur_obj.fetchone()
+            self.cur_obj.execute(f"SELECT tenant_balance FROM tenantstatus WHERE house_number='{house_no}'")
             balance = cur_obj.fetchone()
             self.check_tenant_state_label.configure(text=f"Tenant state of tenant in house number: {self.select_house_combobox.get()} is {my_label[0]} and balance is {balance[0]} ", font=('Roboto', 15))
             self.check_tenant_state_label.grid(row=3, column=0, padx=10, pady=10)
         def destruct():
+            global cur_obj, conn_obj
             self.action = "add"
             self.firstname = self.first_name_entry.get()
             self.lastname = self.last_name_entry.get()
@@ -138,7 +139,7 @@ class InputDialog:
         #Update tenant widgets
         conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database="SamInvestments")
         cur_obj = conn_obj.cursor()
-        self.cur_object.execute(
+        cur_obj.execute(
             'CREATE TABLE IF NOT EXISTS tenantinfo(tenant_id SERIAL PRIMARY KEY, first_name VARCHAR(255) NOT NULL, last_name VARCHAR(255), house_no VARCHAR(5));')
         cur_obj.execute("SELECT house_no FROM tenantinfo")
         house_numbers = cur_obj.fetchall()
