@@ -16,6 +16,7 @@ conn_obj.commit()
 conn_obj.close()
 client = Client(account_sid[0], auth_token[0])
 
+
 class sms_input_dialogue:
     def __init__(self):
         self.root = ctk.CTk()
@@ -37,6 +38,7 @@ class sms_input_dialogue:
                 conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
                                             database="SamInvestments")
                 cur_obj = conn_obj.cursor()
+
                 cur_obj.execute(f"INSERT INTO messages(message_title, message_content) VALUES('{self.sms_title.get()}','{self.sms_content.get()}')")
                 conn_obj.commit()
                 conn_obj.close()

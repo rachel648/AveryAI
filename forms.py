@@ -138,6 +138,8 @@ class InputDialog:
         #Update tenant widgets
         conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database="SamInvestments")
         cur_obj = conn_obj.cursor()
+        self.cur_object.execute(
+            'CREATE TABLE IF NOT EXISTS tenantinfo(tenant_id SERIAL PRIMARY KEY, first_name VARCHAR(255) NOT NULL, last_name VARCHAR(255), house_no VARCHAR(5));')
         cur_obj.execute("SELECT house_no FROM tenantinfo")
         house_numbers = cur_obj.fetchall()
         house_nos = []
