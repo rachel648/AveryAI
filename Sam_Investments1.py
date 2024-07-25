@@ -1,20 +1,17 @@
 import tkinter as tk
 from tkinter import *
-import customtkinter as ctk
-from PIL import Image
 from tkinter import ttk
-import psycopg2
-from AveryAI import forms
-from AveryAI import sms
-from AveryAI import payment
-from postgresDatabase import MyDatabase
+
+import customtkinter as ctk
 import cv2
+# import AveryAI
+import psycopg2
+from PIL import Image
 
-import os
-from twilio.rest import Client
-
-
-
+import forms
+import payment
+import sms
+from postgresDatabase import MyDatabase
 
 cap = cv2.VideoCapture(0)
 
@@ -40,6 +37,7 @@ class MyGui:
         self.root.geometry("1280x720")
         self.root.title("Sam Investments LTD")
         self.screen_height = self.root.winfo_screenheight()
+
 
         # functions
         def authenticate(username, password):
@@ -128,6 +126,11 @@ class MyGui:
                                              host=MyDatabase.hostname,
                                              database='SamInvestments')
             self.cur_object = self.conn_obj.cursor()
+
+            self.cur_object.execute(
+                'CREATE TABLE IF NOT EXISTS tenantinfo(tenant_id SERIAL PRIMARY KEY, first_name VARCHAR(255) NOT NULL, last_name VARCHAR(255), house_no VARCHAR(5));')
+            self.cur_object.execute(
+                'CREATE TABLE IF NOT EXISTS payments(pay_id SERIAL PRIMARY KEY, pay_reason VARCHAR(455) NOT NULL, pay_amount INTEGER, pay_date TIMESTAMP);')
             self.cur_object.execute('SELECT message_id FROM messages')
             message_ids = self.cur_object.fetchall()
             self.cur_object.execute('SELECT message_title FROM messages')
@@ -294,7 +297,7 @@ class MyGui:
         self.mainframe = ctk.CTkFrame(master=self.root)
         self.tenants = ctk.CTkFrame(master=self.root)
         self.expenses = ctk.CTkFrame(master=self.root)
-        self.sms_thing= ctk.CTkFrame(master=self.root)
+        self.sms_thing = ctk.CTkFrame(master=self.root)
         self.view_CCTV = ctk.CTkFrame(master=self.root)
         # Actual widgets
         self.main_label = ctk.CTkLabel(self.loginframe, text="SAM INVESTMENTS RENTAL MANAGEMENT",
@@ -475,6 +478,9 @@ class MyGui:
         self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
                                          database='SamInvestments')
         self.cur_object = self.conn_obj.cursor()
+        self.cur_object.execute(
+            'CREATE TABLE IF NOT EXISTS payments(pay_id SERIAL PRIMARY KEY, pay_reason VARCHAR(455) NOT NULL, '
+            'pay_amount INTEGER, pay_date TIMESTAMP);')
         self.cur_object.execute('SELECT pay_id FROM payments')
         pay_ids = self.cur_object.fetchall()
         self.cur_object.execute('SELECT pay_reason FROM payments')
@@ -529,6 +535,8 @@ class MyGui:
         self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname,
                                          database='SamInvestments')
         self.cur_object = self.conn_obj.cursor()
+        self.cur_object.execute(
+            'CREATE TABLE IF NOT EXISTS messages(message_id SERIAL PRIMARY KEY, message_title VARCHAR(255) NOT NULL, message_content VARCHAR(700), message_date TIMESTAMP);')
         self.cur_object.execute('SELECT message_id FROM messages')
         message_ids = self.cur_object.fetchall()
         self.cur_object.execute('SELECT message_title FROM messages')
@@ -580,6 +588,8 @@ class MyGui:
                                          database='SamInvestments')
         self.conn_obj = psycopg2.connect(user=MyDatabase.username, password=MyDatabase.pwd, host=MyDatabase.hostname, database='SamInvestments')
         self.cur_object = self.conn_obj.cursor()
+        self.cur_object.execute(
+            'CREATE TABLE IF NOT EXISTS tenantinfo(tenant_id SERIAL PRIMARY KEY, first_name VARCHAR(255) NOT NULL, last_name VARCHAR(255), house_no VARCHAR(5));')
         self.cur_object.execute('SELECT tenant_id FROM tenantinfo')
         tenant_ids = self.cur_object.fetchall()
         self.cur_object.execute('SELECT first_name FROM tenantinfo')
