@@ -25,7 +25,7 @@ class InputDialog:
         self.firstname = None
         self.realdata1 = None
         self.root = ctk.CTk()
-        self.root.geometry("640x480")
+        self.root.geometry("720x480")
         self.root.title("Tenant Actions")
         self.root.resizable(False, False)
 

@@ -18,7 +18,8 @@ cap = cv2.VideoCapture(0)
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
-sectionwidth = 420
+sectionwidth = 550
+sectionheight = 320
 
 
 class MyGui:
@@ -234,6 +235,7 @@ class MyGui:
                 counter = counter + 1
 
         def search_for_tenant(event):
+            global id_late
             name = self.search_tenant.get()
             print(name)
             result = None
@@ -336,23 +338,23 @@ class MyGui:
         self.sideframe.pack_propagate(False)
         self.sideframe.grid(row=0, column=0, rowspan=3, padx=(0, 20), pady=0)
 
-        self.expense_tracking_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
+        self.expense_tracking_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=sectionheight, width=sectionwidth)
         self.expense_tracking_frame.pack_propagate(False)
         self.expense_tracking_frame.bind("<Enter>", command=change_cursor(self.expense_tracking_frame))
         self.expense_tracking_frame.bind("<Button-1>", expense_tracking_event)
-        self.expense_tracking_frame.bind("<Enter>", command=lambda e: self.expense_tracking_frame.configure(fg_color="green", height=310, width=(sectionwidth+10)))
-        self.expense_tracking_frame.bind("<Leave>", command=lambda e: self.expense_tracking_frame.configure(fg_color="#0e1b52", height=300, width=sectionwidth))
+        self.expense_tracking_frame.bind("<Enter>", command=lambda e: self.expense_tracking_frame.configure(fg_color="green", height=(sectionheight+10), width=(sectionwidth+10)))
+        self.expense_tracking_frame.bind("<Leave>", command=lambda e: self.expense_tracking_frame.configure(fg_color="#0e1b52", height=sectionheight, width=sectionwidth))
         self.expense_tracking_frame.grid(row=0, column=1, padx=10, pady=10)
 
         self.expense_tracking_label = ctk.CTkLabel(self.expense_tracking_frame, text="Expense tracking", font=('Arial', 16))
         self.expense_tracking_label.pack(padx=10, pady=10)
 
-        self.tenant_management_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
+        self.tenant_management_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=sectionheight, width=sectionwidth)
         self.tenant_management_frame.pack_propagate(False)
         self.tenant_management_frame.bind("<Enter>", command=change_cursor(self.tenant_management_frame))
         self.tenant_management_frame.bind("<Button-1>", tenant_management)
-        self.tenant_management_frame.bind("<Enter>", command= lambda e: self.tenant_management_frame.configure(fg_color="green", height=310, width=(sectionwidth+10)))
-        self.tenant_management_frame.bind("<Leave>", command= lambda e: self.tenant_management_frame.configure(fg_color="#0e1b52", height=300, width=sectionwidth))
+        self.tenant_management_frame.bind("<Enter>", command= lambda e: self.tenant_management_frame.configure(fg_color="green", height=(sectionheight+10), width=(sectionwidth+10)))
+        self.tenant_management_frame.bind("<Leave>", command= lambda e: self.tenant_management_frame.configure(fg_color="#0e1b52", height=sectionheight, width=sectionwidth))
         self.tenant_management_frame.grid(row=1, column=1, padx=10, pady=10)
 
         self.tenant_management_label = ctk.CTkLabel(self.tenant_management_frame, text="Tenant Management",
@@ -361,12 +363,12 @@ class MyGui:
 
 
 
-        self.CCTV_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
+        self.CCTV_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=sectionheight, width=sectionwidth)
         self.CCTV_frame.pack_propagate(False)
         self.CCTV_frame.bind("<Enter", change_cursor(self.CCTV_frame))
         self.CCTV_frame.bind("<Button-1>", CCTV_see)
-        self.CCTV_frame.bind("<Enter>", command=lambda e: self.CCTV_frame.configure(fg_color="green", height=310, width=(sectionwidth+10)))
-        self.CCTV_frame.bind("<Leave>", command=lambda e: self.CCTV_frame.configure(fg_color="#0e1b52",  height=300, width=sectionwidth))
+        self.CCTV_frame.bind("<Enter>", command=lambda e: self.CCTV_frame.configure(fg_color="green", height=(sectionheight+10), width=(sectionwidth+10)))
+        self.CCTV_frame.bind("<Leave>", command=lambda e: self.CCTV_frame.configure(fg_color="#0e1b52",  height=sectionheight, width=sectionwidth))
         self.CCTV_frame.grid(row=1, column=2, padx=10, pady=10)
         self.CCTV_label = ctk.CTkLabel(self.CCTV_frame, text="CCTV interface")
         self.CCTV_label.pack(padx=10, pady=10)
@@ -380,12 +382,12 @@ class MyGui:
         self.CCTVreturn_button.pack(padx=10, pady=60)
 
 
-        self.SMS_automation_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=300, width=sectionwidth)
+        self.SMS_automation_frame = ctk.CTkFrame(self.mainframe, fg_color="#0e1b52", height=sectionheight, width=sectionwidth)
         self.SMS_automation_frame.pack_propagate(False)
         self.SMS_automation_frame.bind("<Enter>", command=change_cursor(self.SMS_automation_frame))
         self.SMS_automation_frame.bind("<Button-1>", sms_automation)
-        self.SMS_automation_frame.bind("<Enter>", command=lambda e: self.SMS_automation_frame.configure(fg_color="green", height=310, width=(sectionwidth+10)))
-        self.SMS_automation_frame.bind("<Leave>", command=lambda e: self.SMS_automation_frame.configure(fg_color="#0e1b52", height=300, width=sectionwidth))
+        self.SMS_automation_frame.bind("<Enter>", command=lambda e: self.SMS_automation_frame.configure(fg_color="green", height=(sectionheight+10), width=(sectionwidth+10)))
+        self.SMS_automation_frame.bind("<Leave>", command=lambda e: self.SMS_automation_frame.configure(fg_color="#0e1b52", height=sectionheight, width=sectionwidth))
         self.SMS_automation_frame.grid(row=0, column=2, padx=10, pady=10)
 
         self.SMS_automation_label = ctk.CTkLabel(self.SMS_automation_frame, text="SMS Automation frames", font=('Arial', 16))
