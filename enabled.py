@@ -11,6 +11,16 @@ engine = pyttsx3.init()
 
 # Function to convert text to speech
 def text_to_speech(text):
+    rate = engine.getProperty('rate')
+    engine.setProperty('rate', rate - 15 )  # Slows down the speech
+
+    # You can adjust the volume (optional)
+    volume = engine.getProperty('volume')
+    engine.setProperty('volume', 1.0)  # Maximum volume
+
+    # You can set the voice type (optional, male/female)
+    voices = engine.getProperty('voices')
+    engine.setProperty('voice', voices[1].id)
     engine.say(text)
     engine.runAndWait()
 
